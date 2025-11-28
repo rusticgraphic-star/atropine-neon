@@ -266,7 +266,10 @@ const Checkout = () => {
               {product.type === 'paid' && (
                 <div className="text-center p-4 bg-background rounded-lg border border-border">
                   <p className="text-sm text-muted-foreground mb-1">Amount to Pay</p>
-                  <p className="text-4xl font-bold text-primary">{product.price}</p>
+                  <p className="text-4xl font-bold text-primary">{displayPrice}</p>
+                  {selectedTier && (
+                    <p className="text-xs text-muted-foreground mt-2">{selectedTier.label}</p>
+                  )}
                 </div>
               )}
 
