@@ -1,4 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getProductBySlug } from '@/data/products';
@@ -8,6 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const product = getProductBySlug(slug || '');
+  const [selectedTier, setSelectedTier] = useState(product?.pricingTiers?.[0]);
 
   if (!product) {
     return (
@@ -68,19 +70,37 @@ const ProductDetail = () => {
                 {product.description}
               </p>
 
-              {/* Price */}
-              {product.type === 'paid' && product.price && (
+              {/* Pricing Tiers */}
+              {product.type === 'paid' && product.pricingTiers && (
                 <div className="mb-6">
-                  <div className="flex items-baseline space-x-2">
-                    <span className="text-5xl font-bold text-primary">{product.price}</span>
-                    {product.priceRange && (
-                      <span className="text-lg text-muted-foreground">onwards</span>
-                    )}
+                  <h3 className="text-lg font-semibold text-foreground mb-3">Select Subscription</h3>
+                  <div className="space-y-2">
+                    {product.pricingTiers.map((tier) => (
+                      <button
+                        key={tier.id}
+                        onClick={() => setSelectedTier(tier)}
+                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                          selectedTier?.id === tier.id
+                            ? 'border-primary bg-primary/10 shadow-neon'
+                            : 'border-border bg-panel hover:border-primary/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-foreground">{tier.label}</p>
+                            <p className="text-sm text-muted-foreground">{tier.duration}</p>
+                          </div>
+                          <p className="text-2xl font-bold text-primary">{tier.price}</p>
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                  {product.priceRange && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Range: {product.priceRange}
-                    </p>
+                  {selectedTier && (
+                    <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
+                      <p className="text-sm text-muted-foreground">
+                        Selected: <span className="font-semibold text-foreground">{selectedTier.label}</span> - {selectedTier.price}
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
@@ -102,7 +122,7 @@ const ProductDetail = () => {
               </div>
 
               {/* CTA */}
-              <Link to={`/checkout?product=${product.id}`}>
+              <Link to={`/checkout?product=${product.id}&tier=${selectedTier?.id || ''}`}>
                 <Button 
                   size="lg"
                   className="w-full bg-primary hover:bg-primary-glow text-primary-foreground py-6 text-lg shadow-neon"
@@ -190,7 +210,7 @@ const ProductDetail = () => {
 
         {/* Final CTA */}
         <div className="text-center">
-          <Link to={`/checkout?product=${product.id}`}>
+          <Link to={`/checkout?product=${product.id}&tier=${selectedTier?.id || ''}`}>
             <Button 
               size="lg"
               className="bg-primary hover:bg-primary-glow text-primary-foreground px-12 py-6 text-lg shadow-neon"

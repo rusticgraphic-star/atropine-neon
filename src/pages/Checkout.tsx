@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { getProductBySlug, products } from '@/data/products';
-import { Copy, Download } from 'lucide-react';
+import { products, PricingTier } from '@/data/products';
+import { Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import upiQr from '@/assets/upi-qr.png';
 
@@ -14,7 +14,12 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const productId = searchParams.get('product');
+  const tierId = searchParams.get('tier');
   const product = products.find(p => p.id === productId);
+  
+  const [selectedTier, setSelectedTier] = useState<PricingTier | undefined>(
+    product?.pricingTiers?.find(t => t.id === tierId) || product?.pricingTiers?.[0]
+  );
 
   const [formData, setFormData] = useState({
     name: '',
@@ -72,7 +77,8 @@ const Checkout = () => {
       product: {
         id: product?.id,
         name: product?.name,
-        price: product?.price
+        price: selectedTier?.price || product?.price || 'Free',
+        tier: selectedTier?.label
       },
       timestamp: new Date().toISOString(),
       status: 'pending_verification'
@@ -91,7 +97,9 @@ const Checkout = () => {
     return null;
   }
 
-  const displayPrice = product.type === 'paid' ? product.price : 'Free';
+  const displayPrice = product.type === 'paid' 
+    ? (selectedTier?.price || product.price) 
+    : 'Free';
 
   return (
     <div className="min-h-screen bg-background pt-32 pb-24">
@@ -183,14 +191,50 @@ const Checkout = () => {
                 />
               </div>
 
-              {/* Selected Product */}
-              <div className="p-4 bg-background rounded-lg border border-border">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-semibold text-foreground">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground">{product.type === 'paid' ? 'Premium' : 'Free'} Indicator</p>
+              {/* Pricing Tier Selection */}
+              {product.type === 'paid' && product.pricingTiers && product.pricingTiers.length > 0 && (
+                <div>
+                  <Label className="text-foreground mb-3 block">
+                    Select Subscription Plan <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="space-y-2">
+                    {product.pricingTiers.map((tier) => (
+                      <button
+                        key={tier.id}
+                        type="button"
+                        onClick={() => setSelectedTier(tier)}
+                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                          selectedTier?.id === tier.id
+                            ? 'border-primary bg-primary/10 shadow-neon'
+                            : 'border-border bg-background hover:border-primary/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-foreground">{tier.label}</p>
+                            <p className="text-sm text-muted-foreground">{tier.duration}</p>
+                          </div>
+                          <p className="text-xl font-bold text-primary">{tier.price}</p>
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                  <div className="text-2xl font-bold text-primary">{displayPrice}</div>
+                </div>
+              )}
+
+              {/* Selected Product Summary */}
+              <div className="p-4 bg-background rounded-lg border border-border">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="font-semibold text-foreground">{product.name}</h3>
+                      <p className="text-sm text-muted-foreground">{product.type === 'paid' ? 'Premium' : 'Free'} Indicator</p>
+                      {selectedTier && (
+                        <p className="text-xs text-muted-foreground mt-1">{selectedTier.label}</p>
+                      )}
+                    </div>
+                    <div className="text-2xl font-bold text-primary">{displayPrice}</div>
+                  </div>
                 </div>
               </div>
 

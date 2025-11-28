@@ -1,3 +1,10 @@
+export interface PricingTier {
+  id: string;
+  label: string;
+  price: string;
+  duration: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -5,6 +12,7 @@ export interface Product {
   type: 'free' | 'paid';
   price?: string;
   priceRange?: string;
+  pricingTiers?: PricingTier[];
   description: string;
   thumbnail: string;
   features: string[];
@@ -86,6 +94,13 @@ export const products: Product[] = [
     type: 'paid',
     priceRange: '₹699 – ₹39,999',
     price: '₹699',
+    pricingTiers: [
+      { id: '30d', label: '30 Days Subscription', price: '₹699', duration: '30 days' },
+      { id: '1y', label: '1 Year Subscription', price: '₹2,199', duration: '1 year' },
+      { id: '3y', label: '3 Year Subscription', price: '₹4,999', duration: '3 years' },
+      { id: '5y', label: '5 Year Subscription', price: '₹9,999', duration: '5 years' },
+      { id: 'lifetime', label: 'Lifetime Subscription', price: '₹39,999', duration: 'Lifetime' }
+    ],
     description: 'Professional Market Profile with TPO, volume profile and value areas',
     thumbnail: 'https://i0.wp.com/atropine.in/wp-content/uploads/2022/04/BANKNIFTY1_2022-04-15_11-13-00-2-e1653502124325.png',
     features: [
@@ -109,6 +124,13 @@ export const products: Product[] = [
     type: 'paid',
     priceRange: '₹699 – ₹49,999',
     price: '₹699',
+    pricingTiers: [
+      { id: '30d', label: '30 Days Subscription', price: '₹699', duration: '30 days' },
+      { id: '1y', label: '1 Year Subscription', price: '₹2,999', duration: '1 year' },
+      { id: '3y', label: '3 Year Subscription', price: '₹9,999', duration: '3 years' },
+      { id: '5y', label: '5 Year Subscription', price: '₹19,999', duration: '5 years' },
+      { id: 'lifetime', label: 'Lifetime Subscription', price: '₹49,999', duration: 'Lifetime' }
+    ],
     description: 'Central Pivot Range with virgin & narrow CPR detection across timeframes',
     thumbnail: 'https://i0.wp.com/atropine.in/wp-content/uploads/2022/05/Screenshot-202-3-e1657633940625.png',
     features: [
@@ -132,6 +154,13 @@ export const products: Product[] = [
     type: 'paid',
     priceRange: '₹499 – ₹44,999',
     price: '₹499',
+    pricingTiers: [
+      { id: '30d', label: '30 Days Subscription', price: '₹499', duration: '30 days' },
+      { id: '1y', label: '1 Year Subscription', price: '₹2,499', duration: '1 year' },
+      { id: '3y', label: '3 Year Subscription', price: '₹8,999', duration: '3 years' },
+      { id: '5y', label: '5 Year Subscription', price: '₹17,999', duration: '5 years' },
+      { id: 'lifetime', label: 'Lifetime Subscription', price: '₹44,999', duration: 'Lifetime' }
+    ],
     description: 'Identify untested Central Pivot Range zones for high-probability trades',
     thumbnail: 'https://i0.wp.com/atropine.in/wp-content/uploads/2022/07/Screenshot-201-e1657647302449.png',
     features: [
@@ -155,6 +184,13 @@ export const products: Product[] = [
     type: 'paid',
     priceRange: '₹699 – ₹59,999',
     price: '₹699',
+    pricingTiers: [
+      { id: '30d', label: '30 Days Subscription', price: '₹699', duration: '30 days' },
+      { id: '1y', label: '1 Year Subscription', price: '₹3,999', duration: '1 year' },
+      { id: '3y', label: '3 Year Subscription', price: '₹14,999', duration: '3 years' },
+      { id: '5y', label: '5 Year Subscription', price: '₹29,999', duration: '5 years' },
+      { id: 'lifetime', label: 'Lifetime Subscription', price: '₹59,999', duration: 'Lifetime' }
+    ],
     description: 'Volume Spread Analysis with smart money detection and volume anomalies',
     thumbnail: 'https://i0.wp.com/atropine.in/wp-content/uploads/2022/04/BANKNIFTY1_2022-04-15_10-34-13-3-e1653501385447.png',
     features: [
@@ -178,6 +214,13 @@ export const products: Product[] = [
     type: 'paid',
     priceRange: '₹699 – ₹59,999',
     price: '₹699',
+    pricingTiers: [
+      { id: '30d', label: '30 Days Subscription', price: '₹699', duration: '30 days' },
+      { id: '1y', label: '1 Year Subscription', price: '₹3,999', duration: '1 year' },
+      { id: '3y', label: '3 Year Subscription', price: '₹14,999', duration: '3 years' },
+      { id: '5y', label: '5 Year Subscription', price: '₹29,999', duration: '5 years' },
+      { id: 'lifetime', label: 'Lifetime Subscription', price: '₹59,999', duration: 'Lifetime' }
+    ],
     description: 'Automated supply and demand zone detection with Smart Money Concepts',
     thumbnail: 'https://i0.wp.com/atropine.in/wp-content/uploads/2022/04/ACC_2022-04-11_15-14-25_df3ea-1-e1653499999813.png',
     features: [
