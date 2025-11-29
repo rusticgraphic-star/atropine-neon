@@ -54,7 +54,7 @@ export const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <a 
-                  href="https://wa.me/919527120377" 
+                  href="https://wa.me/918668657835" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary transition-colors"

@@ -3,7 +3,7 @@ import { MessageCircle } from 'lucide-react';
 export const WhatsAppButton = () => {
   const handleClick = () => {
     window.open(
-      'https://wa.me/919527120377?text=Hello,%20I%20need%20help%20with%20Atropine%20TradingView%20Indicators.',
+      'https://wa.me/918668657835?text=Hello,%20I%20need%20help%20with%20Atropine%20TradingView%20Indicators.',
       '_blank'
     );
   };

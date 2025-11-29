@@ -107,7 +107,7 @@ Need help? Reply to this message.
 Thank you for choosing Atropine!`;
 
       window.open(
-        `https://wa.me/${order.customer_phone?.replace(/[^0-9]/g, '') || '919527120377'}?text=${encodeURIComponent(message)}`,
+        `https://wa.me/${order.customer_phone?.replace(/[^0-9]/g, '') || '918668657835'}?text=${encodeURIComponent(message)}`,
         '_blank'
       );
       

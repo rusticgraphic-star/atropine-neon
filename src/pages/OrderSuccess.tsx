@@ -30,7 +30,7 @@ Order ID: ${orderData.orderId}
 - Payment Screenshot: (I will send it)`;
 
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/919527120377?text=${encodedMessage}`, '_blank');
+    window.open(`https://wa.me/918668657835?text=${encodedMessage}`, '_blank');
   };
 
   return (
@@ -131,12 +131,12 @@ Order ID: ${orderData.orderId}
           <p className="text-sm text-muted-foreground">
             Need help? Contact us on{' '}
             <a 
-              href="https://wa.me/919527120377" 
+              href="https://wa.me/918668657835" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              WhatsApp: +91 95271 20377
+              WhatsApp: +91 86686 57835
             </a>
           </p>
         </div>
