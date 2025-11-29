@@ -9,6 +9,8 @@ const OrderSuccess = () => {
   const [orderData, setOrderData] = useState<any>(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+    
     // Get order data from localStorage
     const storedOrder = localStorage.getItem('currentOrder');
     if (storedOrder) {

@@ -1,9 +1,14 @@
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Pricing = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const pricingTiers = [
     {
       name: 'Free Indicators',

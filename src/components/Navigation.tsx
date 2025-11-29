@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Menu, X, ShoppingCart } from 'lucide-react';
+import { Menu, X, ShoppingCart, User } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, isAdmin } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -63,9 +65,32 @@ export const Navigation = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-              <ShoppingCart className="h-5 w-5" />
-            </Button>
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Link to="/admin">
+                    <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+                      <User className="h-5 w-5 mr-2" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                  <ShoppingCart className="h-5 w-5" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+                    Login
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                  <ShoppingCart className="h-5 w-5" />
+                </Button>
+              </>
+            )}
             <Link to="/shop">
               <Button className="bg-primary hover:bg-primary-glow text-primary-foreground shadow-neon">
                 Get Started
@@ -107,6 +132,21 @@ export const Navigation = () => {
                 </Link>
               ))}
               <div className="pt-4 space-y-2">
+                {user && isAdmin && (
+                  <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start">
+                      <User className="w-4 h-4 mr-2" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
+                {!user && (
+                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      Login
+                    </Button>
+                  </Link>
+                )}
                 <Link to="/shop" onClick={() => setIsMobileMenuOpen(false)}>
                   <Button className="w-full bg-primary hover:bg-primary-glow">
                     Get Started

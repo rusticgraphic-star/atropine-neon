@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ProductCard } from '@/components/ProductCard';
 import { products, getFreeProducts, getPaidProducts } from '@/data/products';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,10 @@ import { Button } from '@/components/ui/button';
 type FilterType = 'all' | 'premium' | 'free';
 
 const Shop = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   const getFilteredProducts = () => {
@@ -15,7 +19,8 @@ const Shop = () => {
       case 'free':
         return getFreeProducts();
       default:
-        return products;
+        // Return paid first, then free
+        return [...getPaidProducts(), ...getFreeProducts()];
     }
   };
 

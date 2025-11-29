@@ -1,7 +1,8 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/ProductCard';
-import { products } from '@/data/products';
+import { products, getPaidProducts, getFreeProducts } from '@/data/products';
 import { CheckCircle, TrendingUp, Zap, Shield, Clock, Users } from 'lucide-react';
 import heroChart from '@/assets/hero-chart.jpg';
 import patternBg from '@/assets/pattern-bg.jpg';
@@ -10,7 +11,13 @@ import demo2 from '@/assets/demo-2.jpg';
 import demo3 from '@/assets/demo-3.jpg';
 
 const Home = () => {
-  const featuredProducts = products.slice(0, 6);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Paid first, then free
+  const sortedProducts = [...getPaidProducts(), ...getFreeProducts()];
+  const featuredProducts = sortedProducts.slice(0, 6);
 
   const benefits = [
     {
