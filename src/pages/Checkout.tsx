@@ -50,7 +50,7 @@ const Checkout = () => {
   };
 
   const copyUpiId = () => {
-    navigator.clipboard.writeText('9527120377@ybl');
+    navigator.clipboard.writeText('8668657835@ybl');
     toast({
       title: 'Copied!',
       description: 'UPI ID copied to clipboard',
