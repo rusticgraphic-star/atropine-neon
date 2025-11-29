@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getProductBySlug } from '@/data/products';
@@ -7,6 +7,10 @@ import { CheckCircle, Star, ArrowLeft } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const ProductDetail = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const { slug } = useParams<{ slug: string }>();
   const product = getProductBySlug(slug || '');
   const [selectedTier, setSelectedTier] = useState(product?.pricingTiers?.[0]);
@@ -127,7 +131,7 @@ const ProductDetail = () => {
                   size="lg"
                   className="w-full bg-primary hover:bg-primary-glow text-primary-foreground py-6 text-lg shadow-neon"
                 >
-                  {product.type === 'paid' ? 'Buy & Get Instant Access' : 'Get Free Access'}
+                  {product.type === 'paid' ? 'Subscribe Now - Get Instant Access' : 'Get Free Access'}
                 </Button>
               </Link>
 
@@ -215,7 +219,7 @@ const ProductDetail = () => {
               size="lg"
               className="bg-primary hover:bg-primary-glow text-primary-foreground px-12 py-6 text-lg shadow-neon"
             >
-              {product.type === 'paid' ? 'Buy Now' : 'Get Free Access'}
+              {product.type === 'paid' ? 'Subscribe Now' : 'Get Free Access'}
             </Button>
           </Link>
         </div>

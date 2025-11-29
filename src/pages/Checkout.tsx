@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +11,10 @@ import { useToast } from '@/hooks/use-toast';
 import upiQr from '@/assets/upi-qr.png';
 
 const Checkout = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -70,8 +75,37 @@ const Checkout = () => {
     // Generate order ID
     const orderId = `ATR-${Date.now()}`;
 
-    // Store order data in localStorage (in production, send to backend)
+    // Create order in database
     const orderData = {
+      order_id: orderId,
+      customer_name: formData.name,
+      customer_email: formData.email,
+      customer_phone: formData.phone,
+      tv_username: formData.tvUsername,
+      notes: formData.notes,
+      product_id: product?.id || '',
+      product_name: product?.name || '',
+      tier_label: selectedTier?.label || null,
+      price: selectedTier?.price || product?.price || 'Free',
+      status: 'pending_verification',
+    };
+
+    const { error } = await supabase
+      .from('orders')
+      .insert([orderData]);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create order. Please try again.',
+        variant: 'destructive',
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Store for current session
+    localStorage.setItem('currentOrder', JSON.stringify({
       orderId,
       ...formData,
       product: {
@@ -79,18 +113,22 @@ const Checkout = () => {
         name: product?.name,
         price: selectedTier?.price || product?.price || 'Free',
         tier: selectedTier?.label
-      },
-      timestamp: new Date().toISOString(),
-      status: 'pending_verification'
-    };
+      }
+    }));
 
-    localStorage.setItem('currentOrder', JSON.stringify(orderData));
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      navigate(`/order-success?orderId=${orderId}`);
-    }, 1000);
+    setIsSubmitting(false);
+    
+    // Navigate to QR payment page
+    navigate('/checkout-qr', {
+      state: {
+        orderData: {
+          orderId,
+          price: selectedTier?.price || product?.price || 'Free',
+          tierLabel: selectedTier?.label || null,
+          productName: product?.name
+        }
+      }
+    });
   };
 
   if (!product) {
@@ -191,33 +229,16 @@ const Checkout = () => {
                 />
               </div>
 
-              {/* Pricing Tier Selection */}
-              {product.type === 'paid' && product.pricingTiers && product.pricingTiers.length > 0 && (
-                <div>
-                  <Label className="text-foreground mb-3 block">
-                    Select Subscription Plan <span className="text-destructive">*</span>
-                  </Label>
-                  <div className="space-y-2">
-                    {product.pricingTiers.map((tier) => (
-                      <button
-                        key={tier.id}
-                        type="button"
-                        onClick={() => setSelectedTier(tier)}
-                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                          selectedTier?.id === tier.id
-                            ? 'border-primary bg-primary/10 shadow-neon'
-                            : 'border-border bg-background hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-foreground">{tier.label}</p>
-                            <p className="text-sm text-muted-foreground">{tier.duration}</p>
-                          </div>
-                          <p className="text-xl font-bold text-primary">{tier.price}</p>
-                        </div>
-                      </button>
-                    ))}
+              {/* Selected Tier Display (Read-only) */}
+              {product.type === 'paid' && selectedTier && (
+                <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                  <p className="text-sm text-muted-foreground mb-1">Selected Plan</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-foreground">{selectedTier.label}</p>
+                      <p className="text-xs text-muted-foreground">{selectedTier.duration}</p>
+                    </div>
+                    <p className="text-2xl font-bold text-primary">{selectedTier.price}</p>
                   </div>
                 </div>
               )}
@@ -243,74 +264,65 @@ const Checkout = () => {
                 disabled={isSubmitting}
                 className="w-full bg-primary hover:bg-primary-glow text-primary-foreground py-6 text-lg shadow-neon"
               >
-                {isSubmitting ? 'Processing...' : 'Submit Order After Payment'}
+                {isSubmitting ? 'Processing...' : 'Continue to Payment'}
               </Button>
             </form>
           </div>
 
-          {/* Right: Payment */}
-          <div className="bg-panel rounded-2xl p-8 border border-primary/30">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Scan & Pay to Complete Your Order</h2>
+          {/* Right: Order Summary */}
+          <div className="bg-panel rounded-2xl p-8 border border-border">
+            <h2 className="text-2xl font-bold text-foreground mb-6">Order Summary</h2>
             
             <div className="space-y-6">
-              {/* QR Code */}
-              <div className="bg-white rounded-xl p-6 flex justify-center">
-                <img 
-                  src={upiQr} 
-                  alt="UPI QR Code" 
-                  className="w-64 h-64 object-contain"
-                />
+              {/* Product Info */}
+              <div className="p-4 bg-background rounded-lg border border-border">
+                <h3 className="font-semibold text-foreground mb-2">{product.name}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{product.description}</p>
+                {selectedTier && (
+                  <div className="pt-3 border-t border-border">
+                    <p className="text-xs text-muted-foreground mb-1">Selected Plan</p>
+                    <p className="text-sm font-semibold text-foreground">{selectedTier.label}</p>
+                    <p className="text-2xl font-bold text-primary mt-2">{selectedTier.price}</p>
+                  </div>
+                )}
+                {!selectedTier && product.price && (
+                  <p className="text-2xl font-bold text-primary mt-2">{product.price}</p>
+                )}
               </div>
 
-              {/* Amount */}
-              {product.type === 'paid' && (
-                <div className="text-center p-4 bg-background rounded-lg border border-border">
-                  <p className="text-sm text-muted-foreground mb-1">Amount to Pay</p>
-                  <p className="text-4xl font-bold text-primary">{displayPrice}</p>
-                  {selectedTier && (
-                    <p className="text-xs text-muted-foreground mt-2">{selectedTier.label}</p>
-                  )}
-                </div>
-              )}
-
-              {/* UPI ID */}
+              {/* What's Included */}
               <div>
-                <Label className="text-foreground">UPI ID</Label>
-                <div className="flex items-center space-x-2 mt-2">
-                  <Input 
-                    value="9527120377@ybl" 
-                    readOnly 
-                    className="bg-background border-border text-foreground"
-                  />
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={copyUpiId}
-                    className="border-border"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
+                <h3 className="font-semibold text-foreground mb-3">What's Included:</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start">
+                    <span className="text-primary mr-2">✓</span>
+                    Instant TradingView Access
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-primary mr-2">✓</span>
+                    Lifetime Updates
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-primary mr-2">✓</span>
+                    24/7 Support
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-primary mr-2">✓</span>
+                    Setup within 2-10 minutes
+                  </li>
+                </ul>
               </div>
 
-              {/* Instructions */}
-              <div className="space-y-3">
-                <h3 className="font-semibold text-foreground">Payment Instructions:</h3>
+              {/* Next Steps */}
+              <div className="pt-4 border-t border-border">
+                <h3 className="font-semibold text-foreground mb-2">Next Steps:</h3>
                 <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-                  <li>Scan the QR code using any UPI app (Google Pay, PhonePe, Paytm, BHIM)</li>
-                  <li>Or manually enter the UPI ID: <span className="text-primary font-mono">9527120377@ybl</span></li>
-                  <li>Pay the exact amount: {displayPrice}</li>
-                  <li>After successful payment, fill the form and click "Submit Order"</li>
-                  <li>You'll receive TradingView access within 2-10 minutes</li>
+                  <li>Fill in your details on the left</li>
+                  <li>Click "Continue to Payment"</li>
+                  <li>Scan QR code and pay</li>
+                  <li>Upload payment screenshot</li>
+                  <li>Receive TradingView access!</li>
                 </ol>
-              </div>
-
-              {/* Payment Apps */}
-              <div className="pt-4">
-                <p className="text-xs text-muted-foreground text-center">
-                  Accepted payment methods: UPI, Google Pay, PhonePe, Paytm, BHIM
-                </p>
               </div>
             </div>
           </div>
