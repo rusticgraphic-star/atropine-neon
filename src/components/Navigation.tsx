@@ -21,7 +21,6 @@ export const Navigation = () => {
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/shop', label: 'Indicators' },
-    { to: '/pricing', label: 'Pricing' },
     { to: '/contact', label: 'Contact' },
   ];
 
@@ -75,27 +74,14 @@ export const Navigation = () => {
                     </Button>
                   </Link>
                 )}
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                  <ShoppingCart className="h-5 w-5" />
-                </Button>
               </>
             ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-                    Login
-                  </Button>
-                </Link>
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                  <ShoppingCart className="h-5 w-5" />
+              <Link to="/login">
+                <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+                  Login
                 </Button>
-              </>
+              </Link>
             )}
-            <Link to="/shop">
-              <Button className="bg-primary hover:bg-primary-glow text-primary-foreground shadow-neon">
-                Get Started
-              </Button>
-            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -147,11 +133,6 @@ export const Navigation = () => {
                     </Button>
                   </Link>
                 )}
-                <Link to="/shop" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button className="w-full bg-primary hover:bg-primary-glow">
-                    Get Started
-                  </Button>
-                </Link>
               </div>
             </div>
           </div>

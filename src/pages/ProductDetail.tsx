@@ -2,18 +2,50 @@ import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getProductBySlug } from '@/data/products';
 import { CheckCircle, Star, ArrowLeft } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { supabase } from '@/integrations/supabase/client';
 
 const ProductDetail = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedTier, setSelectedTier] = useState<any>(null);
+
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    fetchProduct();
+  }, [slug]);
 
-  const { slug } = useParams<{ slug: string }>();
-  const product = getProductBySlug(slug || '');
-  const [selectedTier, setSelectedTier] = useState(product?.pricingTiers?.[0]);
+  const fetchProduct = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('slug', slug)
+        .maybeSingle();
+
+      if (error) throw error;
+      setProduct(data);
+      if (data?.pricing_tiers && Array.isArray(data.pricing_tiers)) {
+        setSelectedTier(data.pricing_tiers[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background pt-32 pb-24">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -75,11 +107,11 @@ const ProductDetail = () => {
               </p>
 
               {/* Pricing Tiers */}
-              {product.type === 'paid' && product.pricingTiers && (
+              {product.type === 'paid' && product.pricing_tiers && Array.isArray(product.pricing_tiers) && (
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-foreground mb-3">Select Subscription</h3>
                   <div className="space-y-2">
-                    {product.pricingTiers.map((tier) => (
+                    {product.pricing_tiers.map((tier: any) => (
                       <button
                         key={tier.id}
                         onClick={() => setSelectedTier(tier)}
@@ -200,7 +232,7 @@ const ProductDetail = () => {
             <AccordionItem value="refund" className="bg-panel rounded-lg border border-border px-6">
               <AccordionTrigger className="text-foreground">What is your refund policy?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
-                We offer a 7-day money-back guarantee. If you're not satisfied with the indicator, contact us via WhatsApp within 7 days of purchase for a full refund.
+                We do NOT offer refunds once access is delivered. All sales are final after the TradingView activation link is sent.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="support" className="bg-panel rounded-lg border border-border px-6">
