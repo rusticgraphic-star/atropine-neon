@@ -74,6 +74,69 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          created_at: string
+          description: string
+          display_order: number
+          features: string[] | null
+          id: string
+          images: string[] | null
+          key_features: Json | null
+          long_description: string | null
+          name: string
+          price: string | null
+          price_range: string | null
+          pricing_tiers: Json | null
+          slug: string
+          specs: Json
+          thumbnail: string
+          type: string
+          updated_at: string
+          videos: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          display_order?: number
+          features?: string[] | null
+          id?: string
+          images?: string[] | null
+          key_features?: Json | null
+          long_description?: string | null
+          name: string
+          price?: string | null
+          price_range?: string | null
+          pricing_tiers?: Json | null
+          slug: string
+          specs?: Json
+          thumbnail: string
+          type: string
+          updated_at?: string
+          videos?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          display_order?: number
+          features?: string[] | null
+          id?: string
+          images?: string[] | null
+          key_features?: Json | null
+          long_description?: string | null
+          name?: string
+          price?: string | null
+          price_range?: string | null
+          pricing_tiers?: Json | null
+          slug?: string
+          specs?: Json
+          thumbnail?: string
+          type?: string
+          updated_at?: string
+          videos?: string[] | null
+        }
+        Relationships: []
+      }
       site_config: {
         Row: {
           id: string

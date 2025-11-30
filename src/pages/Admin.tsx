@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OrderManagement } from '@/components/admin/OrderManagement';
 import { QRManagement } from '@/components/admin/QRManagement';
+import { ProductManagement } from '@/components/admin/ProductManagement';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
@@ -49,11 +50,16 @@ const Admin = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="orders" className="space-y-6">
+        <Tabs defaultValue="products" className="space-y-6">
           <TabsList className="bg-panel border border-border">
+            <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="qr">QR & Settings</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="products">
+            <ProductManagement />
+          </TabsContent>
 
           <TabsContent value="orders">
             <OrderManagement />

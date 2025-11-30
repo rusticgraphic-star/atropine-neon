@@ -1,30 +1,60 @@
 import { useState, useEffect } from 'react';
 import { ProductCard } from '@/components/ProductCard';
-import { products, getFreeProducts, getPaidProducts } from '@/data/products';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 type FilterType = 'all' | 'premium' | 'free';
 
 const Shop = () => {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+
   useEffect(() => {
     window.scrollTo(0, 0);
+    fetchProducts();
   }, []);
 
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getFilteredProducts = () => {
     switch (activeFilter) {
       case 'premium':
-        return getPaidProducts();
+        return products.filter(p => p.type === 'paid');
       case 'free':
-        return getFreeProducts();
+        return products.filter(p => p.type === 'free');
       default:
-        // Return paid first, then free
-        return [...getPaidProducts(), ...getFreeProducts()];
+        return products;
     }
   };
 
   const filteredProducts = getFilteredProducts();
+  const paidCount = products.filter(p => p.type === 'paid').length;
+  const freeCount = products.filter(p => p.type === 'free').length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background pt-32 pb-24">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-muted-foreground">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pt-32 pb-24">
@@ -61,7 +91,7 @@ const Shop = () => {
                 : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/50'
             }
           >
-            Premium ({getPaidProducts().length})
+            Premium ({paidCount})
           </Button>
           <Button
             variant={activeFilter === 'free' ? 'default' : 'outline'}
@@ -72,7 +102,7 @@ const Shop = () => {
                 : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/50'
             }
           >
-            Free ({getFreeProducts().length})
+            Free ({freeCount})
           </Button>
         </div>
 
