@@ -5,26 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { products, PricingTier } from '@/data/products';
 import { Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import upiQr from '@/assets/upi-qr.png';
 
 const Checkout = () => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const productId = searchParams.get('product');
   const tierId = searchParams.get('tier');
-  const product = products.find(p => p.id === productId);
-  
-  const [selectedTier, setSelectedTier] = useState<PricingTier | undefined>(
-    product?.pricingTiers?.find(t => t.id === tierId) || product?.pricingTiers?.[0]
-  );
+
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedTier, setSelectedTier] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -37,10 +31,46 @@ const Checkout = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!product) {
+    window.scrollTo(0, 0);
+    fetchProduct();
+  }, []);
+
+  const fetchProduct = async () => {
+    if (!productId) {
       navigate('/shop');
+      return;
     }
-  }, [product, navigate]);
+
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', productId)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      if (!data) {
+        navigate('/shop');
+        return;
+      }
+
+      setProduct(data);
+      
+      // Set selected tier based on URL param or default to first tier
+      if (data.pricing_tiers && Array.isArray(data.pricing_tiers)) {
+        const tier = tierId 
+          ? data.pricing_tiers.find((t: any) => t.id === tierId)
+          : data.pricing_tiers[0];
+        setSelectedTier(tier);
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      navigate('/shop');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -130,6 +160,16 @@ const Checkout = () => {
       }
     });
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background pt-32 pb-24">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return null;
