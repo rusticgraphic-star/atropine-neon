@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Star, ArrowLeft } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { supabase } from '@/integrations/supabase/client';
+import { ProductMediaViewer } from '@/components/ProductMediaViewer';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -73,15 +74,14 @@ const ProductDetail = () => {
 
         {/* Top Split Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-          {/* Left: Image */}
+          {/* Left: Media Viewer */}
           <div className="space-y-4">
-            <div className="relative aspect-square rounded-2xl overflow-hidden border border-primary/30 bg-panel">
-              <img 
-                src={product.thumbnail} 
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <ProductMediaViewer
+              thumbnail={product.thumbnail}
+              images={product.images || []}
+              videos={product.videos || []}
+              productName={product.name}
+            />
           </div>
 
           {/* Right: Buy Box */}
