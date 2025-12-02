@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+
 import { Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import upiQr from '@/assets/upi-qr.png';
@@ -24,8 +24,7 @@ const Checkout = () => {
     name: '',
     email: '',
     phone: '',
-    tvUsername: '',
-    notes: ''
+    tvUsername: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -112,7 +111,6 @@ const Checkout = () => {
       customer_email: formData.email,
       customer_phone: formData.phone,
       tv_username: formData.tvUsername,
-      notes: formData.notes,
       product_id: product?.id || '',
       product_name: product?.name || '',
       tier_label: selectedTier?.label || null,
@@ -257,21 +255,6 @@ const Checkout = () => {
               <p className="text-xs text-muted-foreground mt-1">
                 We'll send indicator access to this TradingView account
               </p>
-            </div>
-
-            <div>
-              <Label htmlFor="notes" className="text-foreground">
-                Notes (Optional)
-              </Label>
-              <Textarea
-                id="notes"
-                name="notes"
-                value={formData.notes}
-                onChange={handleInputChange}
-                placeholder="Any special requirements or questions..."
-                className="mt-2 bg-background border-border text-foreground"
-                rows={3}
-              />
             </div>
 
             <Button 
