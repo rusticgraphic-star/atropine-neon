@@ -244,17 +244,6 @@ const ProductDetail = () => {
           </Accordion>
         </section>
 
-        {/* Final CTA */}
-        <div className="text-center">
-          <Link to={`/checkout?product=${product.id}&tier=${selectedTier?.id || ''}`}>
-            <Button 
-              size="lg"
-              className="bg-primary hover:bg-primary-glow text-primary-foreground px-12 py-6 text-lg shadow-neon"
-            >
-              {product.type === 'paid' ? 'Subscribe Now' : 'Get Free Access'}
-            </Button>
-          </Link>
-        </div>
       </div>
     </div>
   );

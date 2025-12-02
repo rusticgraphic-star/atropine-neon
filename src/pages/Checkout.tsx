@@ -181,191 +181,107 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-background pt-32 pb-24">
-      <div className="container mx-auto px-4 max-w-5xl">
-        <h1 className="text-4xl font-bold text-foreground mb-8 text-center">Checkout</h1>
+      <div className="container mx-auto px-4 max-w-lg">
+        {/* Header with Price */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-foreground mb-2">Checkout</h1>
+          <p className="text-muted-foreground">{product.name}</p>
+          <p className="text-3xl font-bold text-primary mt-2">{displayPrice}</p>
+          {selectedTier && (
+            <p className="text-sm text-muted-foreground">{selectedTier.label} • {selectedTier.duration}</p>
+          )}
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left: Form */}
-          <div className="bg-panel rounded-2xl p-8 border border-border">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Your Information</h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <Label htmlFor="name" className="text-foreground">
-                  Full Name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="John Doe"
-                  required
-                  className="mt-2 bg-background border-border text-foreground"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="email" className="text-foreground">
-                  Email <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="john@example.com"
-                  required
-                  className="mt-2 bg-background border-border text-foreground"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="phone" className="text-foreground">
-                  Phone Number
-                </Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="+91 9876543210"
-                  className="mt-2 bg-background border-border text-foreground"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="tvUsername" className="text-foreground">
-                  TradingView Username <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="tvUsername"
-                  name="tvUsername"
-                  value={formData.tvUsername}
-                  onChange={handleInputChange}
-                  placeholder="your_tv_username"
-                  required
-                  className="mt-2 bg-background border-border text-foreground"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  We'll send indicator access to this TradingView account
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="notes" className="text-foreground">
-                  Notes (Optional)
-                </Label>
-                <Textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  placeholder="Any special requirements or questions..."
-                  className="mt-2 bg-background border-border text-foreground"
-                  rows={3}
-                />
-              </div>
-
-              {/* Selected Tier Display (Read-only) */}
-              {product.type === 'paid' && selectedTier && (
-                <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                  <p className="text-sm text-muted-foreground mb-1">Selected Plan</p>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-foreground">{selectedTier.label}</p>
-                      <p className="text-xs text-muted-foreground">{selectedTier.duration}</p>
-                    </div>
-                    <p className="text-2xl font-bold text-primary">{selectedTier.price}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Selected Product Summary */}
-              <div className="p-4 bg-background rounded-lg border border-border">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-semibold text-foreground">{product.name}</h3>
-                      <p className="text-sm text-muted-foreground">{product.type === 'paid' ? 'Premium' : 'Free'} Indicator</p>
-                      {selectedTier && (
-                        <p className="text-xs text-muted-foreground mt-1">{selectedTier.label}</p>
-                      )}
-                    </div>
-                    <div className="text-2xl font-bold text-primary">{displayPrice}</div>
-                  </div>
-                </div>
-              </div>
-
-              <Button 
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-primary hover:bg-primary-glow text-primary-foreground py-6 text-lg shadow-neon"
-              >
-                {isSubmitting ? 'Processing...' : 'Continue to Payment'}
-              </Button>
-            </form>
-          </div>
-
-          {/* Right: Order Summary */}
-          <div className="bg-panel rounded-2xl p-8 border border-border">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Order Summary</h2>
-            
-            <div className="space-y-6">
-              {/* Product Info */}
-              <div className="p-4 bg-background rounded-lg border border-border">
-                <h3 className="font-semibold text-foreground mb-2">{product.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{product.description}</p>
-                {selectedTier && (
-                  <div className="pt-3 border-t border-border">
-                    <p className="text-xs text-muted-foreground mb-1">Selected Plan</p>
-                    <p className="text-sm font-semibold text-foreground">{selectedTier.label}</p>
-                    <p className="text-2xl font-bold text-primary mt-2">{selectedTier.price}</p>
-                  </div>
-                )}
-                {!selectedTier && product.price && (
-                  <p className="text-2xl font-bold text-primary mt-2">{product.price}</p>
-                )}
-              </div>
-
-              {/* What's Included */}
-              <div>
-                <h3 className="font-semibold text-foreground mb-3">What's Included:</h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-start">
-                    <span className="text-primary mr-2">✓</span>
-                    Instant TradingView Access
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-primary mr-2">✓</span>
-                    Lifetime Updates
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-primary mr-2">✓</span>
-                    24/7 Support
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-primary mr-2">✓</span>
-                    Setup within 2-10 minutes
-                  </li>
-                </ul>
-              </div>
-
-              {/* Next Steps */}
-              <div className="pt-4 border-t border-border">
-                <h3 className="font-semibold text-foreground mb-2">Next Steps:</h3>
-                <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-                  <li>Fill in your details on the left</li>
-                  <li>Click "Continue to Payment"</li>
-                  <li>Scan QR code and pay</li>
-                  <li>Upload payment screenshot</li>
-                  <li>Receive TradingView access!</li>
-                </ol>
-              </div>
+        {/* Form */}
+        <div className="bg-panel rounded-2xl p-8 border border-border">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <Label htmlFor="name" className="text-foreground">
+                Full Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="John Doe"
+                required
+                className="mt-2 bg-background border-border text-foreground"
+              />
             </div>
-          </div>
+
+            <div>
+              <Label htmlFor="email" className="text-foreground">
+                Email <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="john@example.com"
+                required
+                className="mt-2 bg-background border-border text-foreground"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="phone" className="text-foreground">
+                Phone Number
+              </Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder="+91 9876543210"
+                className="mt-2 bg-background border-border text-foreground"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="tvUsername" className="text-foreground">
+                TradingView Username <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="tvUsername"
+                name="tvUsername"
+                value={formData.tvUsername}
+                onChange={handleInputChange}
+                placeholder="your_tv_username"
+                required
+                className="mt-2 bg-background border-border text-foreground"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                We'll send indicator access to this TradingView account
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="notes" className="text-foreground">
+                Notes (Optional)
+              </Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+                placeholder="Any special requirements or questions..."
+                className="mt-2 bg-background border-border text-foreground"
+                rows={3}
+              />
+            </div>
+
+            <Button 
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary hover:bg-primary-glow text-primary-foreground py-6 text-lg shadow-neon"
+            >
+              {isSubmitting ? 'Processing...' : 'Continue to Payment'}
+            </Button>
+          </form>
         </div>
       </div>
     </div>
