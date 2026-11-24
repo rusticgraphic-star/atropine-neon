@@ -18,7 +18,7 @@ const CheckoutQR = () => {
   const { toast } = useToast();
   const orderData = location.state?.orderData;
 
-  const [upiId, setUpiId] = useState('atropine@ybl');
+  const [upiId, setUpiId] = useState('8668657835@ybl');
   const [qrUrl, setQrUrl] = useState(upiQrFallback);
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -76,44 +76,32 @@ const CheckoutQR = () => {
 
     // Upload screenshot if provided
     if (screenshot) {
-      const fileExt = screenshot.name.split('.').pop();
-      const fileName = `screenshots/${orderData.orderId}-${Date.now()}.${fileExt}`;
+      try {
+        const fileExt = screenshot.name.split('.').pop();
+        const fileName = `screenshots/${orderData.orderId}-${Date.now()}.${fileExt}`;
 
-      const { error: uploadError, data } = await supabase.storage
-        .from('payment-assets')
-        .upload(fileName, screenshot);
+        const { error: uploadError } = await supabase.storage
+          .from('payment-assets')
+          .upload(fileName, screenshot);
 
-      if (uploadError) {
-        toast({
-          title: 'Error',
-          description: 'Failed to upload screenshot',
-          variant: 'destructive',
-        });
-        setUploading(false);
-        return;
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage
+            .from('payment-assets')
+            .getPublicUrl(fileName);
+          screenshotUrl = urlData.publicUrl;
+        }
+      } catch (err) {
+        console.warn('Screenshot upload skipped:', err);
       }
-
-      const { data: urlData } = supabase.storage
-        .from('payment-assets')
-        .getPublicUrl(fileName);
-
-      screenshotUrl = urlData.publicUrl;
     }
 
-    // Update order with screenshot
-    const { error: updateError } = await supabase
-      .from('orders')
-      .update({ payment_screenshot_url: screenshotUrl })
-      .eq('order_id', orderData.orderId);
-
-    if (updateError) {
-      toast({
-        title: 'Error',
-        description: 'Failed to submit order',
-        variant: 'destructive',
-      });
-      setUploading(false);
-      return;
+    try {
+      await supabase
+        .from('orders')
+        .update({ payment_screenshot_url: screenshotUrl })
+        .eq('order_id', orderData.orderId);
+    } catch (err) {
+      console.warn('Order update skipped:', err);
     }
 
     toast({
