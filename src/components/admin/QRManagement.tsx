@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, Save } from 'lucide-react';
 
 export const QRManagement = () => {
-  const [upiId, setUpiId] = useState('atropine@ybl');
+  const [upiId, setUpiId] = useState('8668657835@ybl');
   const [qrUrl, setQrUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
