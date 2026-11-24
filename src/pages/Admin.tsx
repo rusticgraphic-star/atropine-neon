@@ -13,14 +13,14 @@ const Admin = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  const { isAdmin, loading, signOut } = useAuth();
+  const { isAdmin, loading, signOut, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !isAdmin) {
+    if (!loading && !isAdmin && !user) {
       navigate('/login');
     }
-  }, [isAdmin, loading, navigate]);
+  }, [isAdmin, user, loading, navigate]);
 
   const handleSignOut = async () => {
     await signOut();
