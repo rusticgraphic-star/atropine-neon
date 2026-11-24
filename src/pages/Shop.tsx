@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { ProductCard } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { products as localProducts } from '@/data/products';
 
 type FilterType = 'all' | 'premium' | 'free';
 
 const Shop = () => {
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<any[]>(localProducts);
+  const [loading, setLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   useEffect(() => {
@@ -22,10 +23,14 @@ const Shop = () => {
         .select('*')
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
-      setProducts(data || []);
+      if (error || !data || data.length === 0) {
+        setProducts(localProducts);
+      } else {
+        setProducts(data);
+      }
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.warn('Supabase not reachable, using local products:', error);
+      setProducts(localProducts);
     } finally {
       setLoading(false);
     }
