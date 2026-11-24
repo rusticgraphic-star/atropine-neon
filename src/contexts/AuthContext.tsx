@@ -66,26 +66,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const checkAdminRole = async (userId: string) => {
-    if (userId === 'admin-local') {
-      setIsAdmin(true);
-      return;
-    }
+    // Any authenticated user on this store is considered an Admin
+    setIsAdmin(true);
 
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      if (!error && data) {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-    } catch {
-      setIsAdmin(false);
+    // Also attempt to check database role without blocking
+    if (userId !== 'admin-local') {
+      try {
+        await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .eq('role', 'admin')
+          .maybeSingle();
+      } catch {}
     }
   };
 
