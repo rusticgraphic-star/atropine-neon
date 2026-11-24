@@ -65,16 +65,12 @@ export const Navigation = () => {
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
-              <>
-                {isAdmin && (
-                  <Link to="/admin">
-                    <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-                      <User className="h-5 w-5 mr-2" />
-                      Admin
-                    </Button>
-                  </Link>
-                )}
-              </>
+              <Link to="/admin">
+                <Button variant="ghost" className="text-primary hover:text-primary-glow font-medium">
+                  <User className="h-5 w-5 mr-2" />
+                  Admin
+                </Button>
+              </Link>
             ) : (
               <Link to="/login">
                 <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
@@ -118,9 +114,9 @@ export const Navigation = () => {
                 </Link>
               ))}
               <div className="pt-4 space-y-2">
-                {user && isAdmin && (
+                {user && (
                   <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start">
+                    <Button variant="ghost" className="w-full justify-start text-primary">
                       <User className="w-4 h-4 mr-2" />
                       Admin
                     </Button>
