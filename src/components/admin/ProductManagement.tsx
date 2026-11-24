@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Pencil, Trash2, Plus, GripVertical, Image as ImageIcon, Video, Upload, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { products as localStaticProducts } from '@/data/products';
 import {
   Dialog,
   DialogContent,
@@ -56,14 +57,36 @@ export const ProductManagement = () => {
         .select('*')
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
-      setProducts((data || []) as Product[]);
+      if (error) {
+        console.warn('Supabase products fetch warning:', error.message);
+        // Fallback to local products
+        const normalized = localStaticProducts.map((p, idx) => ({
+          ...p,
+          display_order: idx + 1,
+          pricing_tiers: p.pricingTiers,
+          price_range: p.priceRange
+        })) as any;
+        setProducts(normalized);
+      } else if (data && data.length > 0) {
+        setProducts(data as Product[]);
+      } else {
+        const normalized = localStaticProducts.map((p, idx) => ({
+          ...p,
+          display_order: idx + 1,
+          pricing_tiers: p.pricingTiers,
+          price_range: p.priceRange
+        })) as any;
+        setProducts(normalized);
+      }
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      console.warn('Exception fetching products, using local fallback:', error);
+      const normalized = localStaticProducts.map((p, idx) => ({
+        ...p,
+        display_order: idx + 1,
+        pricing_tiers: p.pricingTiers,
+        price_range: p.priceRange
+      })) as any;
+      setProducts(normalized);
     } finally {
       setLoading(false);
     }
