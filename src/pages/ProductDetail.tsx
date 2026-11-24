@@ -6,6 +6,7 @@ import { CheckCircle, Star, ArrowLeft } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { supabase } from '@/integrations/supabase/client';
 import { ProductMediaViewer } from '@/components/ProductMediaViewer';
+import { products as localProducts } from '@/data/products';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -18,6 +19,19 @@ const ProductDetail = () => {
     fetchProduct();
   }, [slug]);
 
+  const normalizeProduct = (p: any) => {
+    if (!p) return null;
+    const tiers = p.pricing_tiers || p.pricingTiers || [];
+    return {
+      ...p,
+      pricing_tiers: tiers,
+      images: p.images || [],
+      videos: p.videos || [],
+      features: p.features || [],
+      specs: p.specs || { markets: 'All Markets', timeframes: 'All Timeframes', alerts: 'Available' }
+    };
+  };
+
   const fetchProduct = async () => {
     try {
       const { data, error } = await supabase
@@ -26,13 +40,27 @@ const ProductDetail = () => {
         .eq('slug', slug)
         .maybeSingle();
 
-      if (error) throw error;
-      setProduct(data);
-      if (data?.pricing_tiers && Array.isArray(data.pricing_tiers)) {
-        setSelectedTier(data.pricing_tiers[0]);
+      if (error || !data) {
+        const local = localProducts.find(p => p.slug === slug);
+        const normalized = normalizeProduct(local);
+        setProduct(normalized);
+        if (normalized?.pricing_tiers?.length) {
+          setSelectedTier(normalized.pricing_tiers[0]);
+        }
+      } else {
+        const normalized = normalizeProduct(data);
+        setProduct(normalized);
+        if (normalized?.pricing_tiers?.length) {
+          setSelectedTier(normalized.pricing_tiers[0]);
+        }
       }
     } catch (error) {
-      console.error('Error fetching product:', error);
+      const local = localProducts.find(p => p.slug === slug);
+      const normalized = normalizeProduct(local);
+      setProduct(normalized);
+      if (normalized?.pricing_tiers?.length) {
+        setSelectedTier(normalized.pricing_tiers[0]);
+      }
     } finally {
       setLoading(false);
     }
