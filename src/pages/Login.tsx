@@ -20,7 +20,7 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate('/admin');
     }
   }, [user, navigate]);
 
@@ -41,7 +41,7 @@ const Login = () => {
         title: 'Success',
         description: 'Logged in successfully',
       });
-      navigate('/');
+      navigate('/admin');
     }
 
     setLoading(false);
