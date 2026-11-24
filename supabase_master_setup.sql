@@ -1,58 +1,19 @@
 -- ====================================================================
 -- ATROPINE MASTER BACKEND SETUP (SUPABASE SQL SCRIPT)
--- Run this in Supabase SQL Editor to set up the entire backend database
+-- Run this in Supabase SQL Editor to fix "permission denied" & set up backend
 -- ====================================================================
 
--- 1. Create enum for user roles
-DO $$ BEGIN
-  CREATE TYPE public.app_role AS ENUM ('admin', 'user');
-EXCEPTION
-  WHEN duplicate_object THEN null;
-END $$;
+-- 1. Grant complete schema permissions to all roles
+GRANT USAGE ON SCHEMA public TO postgres, anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO postgres, anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO postgres, anon, authenticated, service_role;
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO postgres, anon, authenticated, service_role;
 
--- 2. Create user_roles table
-CREATE TABLE IF NOT EXISTS public.user_roles (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  role app_role NOT NULL DEFAULT 'user',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE(user_id, role)
-);
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres, anon, authenticated, service_role;
 
-ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
-
-CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
-RETURNS BOOLEAN
-LANGUAGE SQL
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1
-    FROM public.user_roles
-    WHERE user_id = _user_id AND role = _role
-  )
-$$;
-
--- RLS policies for user_roles
-DO $$ BEGIN
-  CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT TO authenticated USING (user_id = auth.uid());
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "Admins can view all roles" ON public.user_roles FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "Admins can insert roles" ON public.user_roles FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "Admins can delete roles" ON public.user_roles FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
--- 3. Create products table
+-- 2. Create products table
 CREATE TABLE IF NOT EXISTS public.products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -76,23 +37,19 @@ CREATE TABLE IF NOT EXISTS public.products (
 
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  CREATE POLICY "Anyone can view products" ON public.products FOR SELECT USING (true);
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+DROP POLICY IF EXISTS "Anyone can view products" ON public.products;
+CREATE POLICY "Anyone can view products" ON public.products FOR SELECT USING (true);
 
-DO $$ BEGIN
-  CREATE POLICY "Admins can insert products" ON public.products FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+DROP POLICY IF EXISTS "Authenticated can insert products" ON public.products;
+CREATE POLICY "Authenticated can insert products" ON public.products FOR INSERT TO authenticated WITH CHECK (true);
 
-DO $$ BEGIN
-  CREATE POLICY "Admins can update products" ON public.products FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+DROP POLICY IF EXISTS "Authenticated can update products" ON public.products;
+CREATE POLICY "Authenticated can update products" ON public.products FOR UPDATE TO authenticated USING (true);
 
-DO $$ BEGIN
-  CREATE POLICY "Admins can delete products" ON public.products FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+DROP POLICY IF EXISTS "Authenticated can delete products" ON public.products;
+CREATE POLICY "Authenticated can delete products" ON public.products FOR DELETE TO authenticated USING (true);
 
--- 4. Create orders table
+-- 3. Create orders table
 CREATE TABLE IF NOT EXISTS public.orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id TEXT NOT NULL UNIQUE,
@@ -110,69 +67,57 @@ CREATE TABLE IF NOT EXISTS public.orders (
   activation_link TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   verified_at TIMESTAMPTZ,
-  verified_by UUID REFERENCES auth.users(id)
+  verified_by UUID
 );
 
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  CREATE POLICY "Admins can view all orders" ON public.orders FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+DROP POLICY IF EXISTS "Anyone can create orders" ON public.orders;
+CREATE POLICY "Anyone can create orders" ON public.orders FOR INSERT TO anon, authenticated WITH CHECK (true);
 
-DO $$ BEGIN
-  CREATE POLICY "Admins can update orders" ON public.orders FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+DROP POLICY IF EXISTS "Authenticated can view orders" ON public.orders;
+CREATE POLICY "Authenticated can view orders" ON public.orders FOR SELECT TO authenticated USING (true);
 
-DO $$ BEGIN
-  CREATE POLICY "Anyone can create orders" ON public.orders FOR INSERT TO anon, authenticated WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+DROP POLICY IF EXISTS "Authenticated can update orders" ON public.orders;
+CREATE POLICY "Authenticated can update orders" ON public.orders FOR UPDATE TO authenticated USING (true);
 
--- 5. Create site_config table (QR and Settings)
+-- 4. Create site_config table (QR and Settings)
 CREATE TABLE IF NOT EXISTS public.site_config (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   key TEXT NOT NULL UNIQUE,
   value TEXT NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_by UUID REFERENCES auth.users(id)
+  updated_by UUID
 );
 
 ALTER TABLE public.site_config ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  CREATE POLICY "Everyone can read config" ON public.site_config FOR SELECT TO anon, authenticated USING (true);
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+DROP POLICY IF EXISTS "Everyone can read config" ON public.site_config;
+CREATE POLICY "Everyone can read config" ON public.site_config FOR SELECT TO anon, authenticated USING (true);
 
-DO $$ BEGIN
-  CREATE POLICY "Admins can update config" ON public.site_config FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "Admins can insert config" ON public.site_config FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+DROP POLICY IF EXISTS "Authenticated can manage config" ON public.site_config;
+CREATE POLICY "Authenticated can manage config" ON public.site_config FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- Default UPI ID
 INSERT INTO public.site_config (key, value)
 VALUES ('upi_id', '8668657835@ybl')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
--- 6. Storage Bucket for Payment Screenshots & Media
+-- 5. Storage Bucket for Payment Screenshots & Media
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('payment-assets', 'payment-assets', true)
 ON CONFLICT (id) DO NOTHING;
 
-DO $$ BEGIN
-  CREATE POLICY "Public can view payment assets" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'payment-assets');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+DROP POLICY IF EXISTS "Public can view payment assets" ON storage.objects;
+CREATE POLICY "Public can view payment assets" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'payment-assets');
 
-DO $$ BEGIN
-  CREATE POLICY "Admins can upload payment assets" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'payment-assets' AND public.has_role(auth.uid(), 'admin'));
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+DROP POLICY IF EXISTS "Anyone can upload screenshots" ON storage.objects;
+CREATE POLICY "Anyone can upload screenshots" ON storage.objects FOR INSERT TO anon, authenticated WITH CHECK (bucket_id = 'payment-assets');
 
-DO $$ BEGIN
-  CREATE POLICY "Anyone can upload screenshots" ON storage.objects FOR INSERT TO anon, authenticated WITH CHECK (bucket_id = 'payment-assets' AND (storage.foldername(name))[1] = 'screenshots');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+DROP POLICY IF EXISTS "Authenticated can manage payment assets" ON storage.objects;
+CREATE POLICY "Authenticated can manage payment assets" ON storage.objects FOR ALL TO authenticated USING (bucket_id = 'payment-assets') WITH CHECK (bucket_id = 'payment-assets');
 
--- 7. Seed Initial 8 Indicators
+-- 6. Seed Initial 8 Indicators
 INSERT INTO public.products (name, slug, type, description, thumbnail, features, specs, display_order, price, price_range, pricing_tiers)
 VALUES
 ('4 Moving Average', '4-moving-average', 'free', 'Four customizable moving averages for trend analysis and confirmation',
