@@ -28,11 +28,25 @@ const Checkout = () => {
     tvUsername: ''
   });
 
+  const [upiId, setUpiId] = useState('8668657835@ybl');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchProduct();
+
+    const localUpi = localStorage.getItem('admin_upi_id');
+    if (localUpi) setUpiId(localUpi);
+
+    supabase
+      .from('site_config')
+      .select('value')
+      .eq('key', 'upi_id')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) setUpiId(data.value);
+      })
+      .catch(() => {});
   }, []);
 
   const fetchProduct = async () => {
@@ -94,7 +108,7 @@ const Checkout = () => {
   };
 
   const copyUpiId = () => {
-    navigator.clipboard.writeText('8668657835@ybl');
+    navigator.clipboard.writeText(upiId);
     toast({
       title: 'Copied!',
       description: 'UPI ID copied to clipboard',
