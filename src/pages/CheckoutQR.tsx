@@ -33,24 +33,33 @@ const CheckoutQR = () => {
   }, [orderData, navigate]);
 
   const fetchConfig = async () => {
-    const { data: upiData } = await supabase
-      .from('site_config')
-      .select('value')
-      .eq('key', 'upi_id')
-      .maybeSingle();
+    const localUpi = localStorage.getItem('admin_upi_id');
+    if (localUpi) setUpiId(localUpi);
+    const localQr = localStorage.getItem('admin_qr_url');
+    if (localQr) setQrUrl(localQr);
 
-    if (upiData) {
-      setUpiId(upiData.value);
-    }
+    try {
+      const { data: upiData } = await supabase
+        .from('site_config')
+        .select('value')
+        .eq('key', 'upi_id')
+        .maybeSingle();
 
-    const { data: qrData } = await supabase
-      .from('site_config')
-      .select('value')
-      .eq('key', 'qr_url')
-      .maybeSingle();
+      if (upiData?.value) {
+        setUpiId(upiData.value);
+      }
 
-    if (qrData && qrData.value) {
-      setQrUrl(qrData.value);
+      const { data: qrData } = await supabase
+        .from('site_config')
+        .select('value')
+        .eq('key', 'qr_url')
+        .maybeSingle();
+
+      if (qrData?.value) {
+        setQrUrl(qrData.value);
+      }
+    } catch (e) {
+      console.warn('Config fetch error:', e);
     }
   };
 
