@@ -22,7 +22,7 @@ const CheckoutQR = () => {
   const [upiId, setUpiId] = useState('8668657835@ybl');
   const [qrUrl, setQrUrl] = useState(upiQrFallback);
   const [qrView, setQrView] = useState<'dynamic' | 'custom'>('dynamic');
-  const [includeAmountInQr, setIncludeAmountInQr] = useState(false);
+  const [includeAmountInQr, setIncludeAmountInQr] = useState(true);
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -75,14 +75,14 @@ const CheckoutQR = () => {
   };
 
   const cleanAmount = orderData?.price ? String(orderData.price).replace(/[^0-9.]/g, '') : '';
-  const numericAmount = cleanAmount && !isNaN(Number(cleanAmount)) ? Number(cleanAmount).toFixed(2) : '';
+  const cleanAmountVal = cleanAmount || '0';
 
   const copyAmount = () => {
-    if (cleanAmount) {
-      navigator.clipboard.writeText(cleanAmount);
+    if (cleanAmountVal) {
+      navigator.clipboard.writeText(cleanAmountVal);
       toast({
         title: 'Amount Copied!',
-        description: `₹${cleanAmount} copied to clipboard`,
+        description: `₹${cleanAmountVal} copied to clipboard`,
       });
     }
   };
@@ -116,7 +116,6 @@ const CheckoutQR = () => {
 
     let screenshotUrl = null;
 
-    // Upload screenshot if provided
     if (screenshot) {
       try {
         const fileExt = screenshot.name.split('.').pop();
@@ -160,20 +159,22 @@ const CheckoutQR = () => {
   }
 
   const cleanUpi = (upiId || '8668657835@ybl').trim();
+  const cleanOrderId = (orderData?.orderId || `ATR${Date.now()}`).replace(/[^a-zA-Z0-9]/g, '');
 
-  // 1. Standard Universal UPI URI (Guaranteed 100% scannable on PhonePe, GPay, Paytm for individual/personal VPAs)
-  const standardUpiUri = `upi://pay?pa=${cleanUpi}&pn=Atropine&cu=INR`;
+  // 1. Dynamic UPI URI with pre-filled amount (Standard NPCI Format)
+  const upiWithAmount = `upi://pay?pa=${cleanUpi}&pn=Atropine&am=${cleanAmountVal}&cu=INR&tr=${cleanOrderId}&tn=Order${cleanOrderId}`;
 
-  // 2. Fixed Amount UPI URI (For direct mobile button or if merchant allows dynamic intent)
-  const amountUpiUri = numericAmount && Number(numericAmount) > 0
-    ? `upi://pay?pa=${cleanUpi}&pn=Atropine&am=${numericAmount}&cu=INR&tn=Order_${orderData?.orderId || 'ATR'}`
-    : standardUpiUri;
+  // 2. Open UPI URI (P2P fallback)
+  const upiOpen = `upi://pay?pa=${cleanUpi}&pn=Atropine&cu=INR`;
 
-  // Active QR content: defaults to standardUpiUri for guaranteed scannability
-  const activeQrUri = includeAmountInQr ? amountUpiUri : standardUpiUri;
+  // Default to amount-included QR code!
+  const activeQrUri = includeAmountInQr ? upiWithAmount : upiOpen;
 
-  // For the mobile click button, we can include the amount directly
-  const mobileIntentUri = amountUpiUri;
+  // Direct app intent links for mobile devices
+  const gpayUri = `gpay://upi/pay?pa=${cleanUpi}&pn=Atropine&am=${cleanAmountVal}&cu=INR&tr=${cleanOrderId}&tn=Order${cleanOrderId}`;
+  const phonepeUri = `phonepe://pay?pa=${cleanUpi}&pn=Atropine&am=${cleanAmountVal}&cu=INR&tr=${cleanOrderId}&tn=Order${cleanOrderId}`;
+  const paytmUri = `paytmmp://pay?pa=${cleanUpi}&pn=Atropine&am=${cleanAmountVal}&cu=INR&tr=${cleanOrderId}&tn=Order${cleanOrderId}`;
+  const genericUpiUri = upiWithAmount;
 
   const hasCustomUploadedQr = Boolean(qrUrl && qrUrl !== upiQrFallback && !qrUrl.includes('upi-qr.png'));
 
@@ -184,7 +185,7 @@ const CheckoutQR = () => {
           Scan & Pay to Complete Order
         </h1>
         <p className="text-center text-sm text-muted-foreground mb-8">
-          Use PhonePe, Google Pay, Paytm, BHIM, or any UPI app to complete your payment
+          Scan with PhonePe, Google Pay, Paytm, or pay directly on your mobile
         </p>
 
         <div className="bg-panel rounded-2xl p-6 md:p-8 border border-primary/30 space-y-6 shadow-2xl">
@@ -234,17 +235,6 @@ const CheckoutQR = () => {
                 <div className="mb-3 flex items-center gap-2 text-xs">
                   <button
                     type="button"
-                    onClick={() => setIncludeAmountInQr(false)}
-                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
-                      !includeAmountInQr
-                        ? 'bg-emerald-600 text-white shadow-md'
-                        : 'bg-slate-800 text-slate-300 hover:text-white'
-                    }`}
-                  >
-                    ✓ Standard Scan (100% Scannable)
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => setIncludeAmountInQr(true)}
                     className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
                       includeAmountInQr
@@ -252,11 +242,22 @@ const CheckoutQR = () => {
                         : 'bg-slate-800 text-slate-300 hover:text-white'
                     }`}
                   >
-                    Auto-Amount (₹{cleanAmount || '0'})
+                    ⚡ Auto-Amount: ₹{cleanAmountVal}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIncludeAmountInQr(false)}
+                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                      !includeAmountInQr
+                        ? 'bg-emerald-600 text-white shadow-md'
+                        : 'bg-slate-800 text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    Open Amount Scan
                   </button>
                 </div>
 
-                {/* Clean White Card with Large Simple QR modules for glare resistance */}
+                {/* Clean White Card with Large Simple QR modules */}
                 <div className="p-4 bg-white rounded-2xl shadow-2xl border-4 border-slate-100 flex items-center justify-center">
                   <QRCodeCanvas
                     id="upi-qr-canvas"
@@ -284,18 +285,43 @@ const CheckoutQR = () => {
 
             <p className="text-xs text-slate-200 font-medium mt-3 flex items-center gap-1.5 text-center">
               <QrCode className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>Point PhonePe, Google Pay, or Paytm camera to scan instantly</span>
+              <span>Scan with Google Pay, PhonePe, Paytm, or BHIM camera</span>
             </p>
           </div>
 
-          {/* Instant 1-Click Pay on Mobile Button */}
-          <a
-            href={mobileIntentUri}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-center"
-          >
-            <Smartphone className="w-5 h-5 shrink-0" />
-            <span>Pay directly with UPI App (GPay / PhonePe / Paytm)</span>
-          </a>
+          {/* Mobile Direct Pay Buttons */}
+          <div className="space-y-2 pt-2">
+            <p className="text-xs font-semibold text-center text-muted-foreground">
+              ⚡ Paying on Mobile? Tap to open your UPI app directly:
+            </p>
+            <div className="grid grid-cols-2 gap-2.5">
+              <a
+                href={gpayUri}
+                className="bg-[#1a73e8] hover:bg-[#1557b0] text-white font-bold py-3 px-3 rounded-xl shadow text-center text-xs flex items-center justify-center gap-1.5 transition-all"
+              >
+                <span>Google Pay (₹{cleanAmountVal})</span>
+              </a>
+              <a
+                href={phonepeUri}
+                className="bg-[#5f259f] hover:bg-[#4d1d82] text-white font-bold py-3 px-3 rounded-xl shadow text-center text-xs flex items-center justify-center gap-1.5 transition-all"
+              >
+                <span>PhonePe (₹{cleanAmountVal})</span>
+              </a>
+              <a
+                href={paytmUri}
+                className="bg-[#00b9f5] hover:bg-[#0092c2] text-white font-bold py-3 px-3 rounded-xl shadow text-center text-xs flex items-center justify-center gap-1.5 transition-all"
+              >
+                <span>Paytm (₹{cleanAmountVal})</span>
+              </a>
+              <a
+                href={genericUpiUri}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-3 rounded-xl shadow text-center text-xs flex items-center justify-center gap-1.5 transition-all"
+              >
+                <Smartphone className="w-4 h-4" />
+                <span>Any UPI App (₹{cleanAmountVal})</span>
+              </a>
+            </div>
+          </div>
 
           {/* Amount Box with 1-Click Copy */}
           <div className="p-4 bg-background rounded-xl border border-border flex items-center justify-between">
@@ -306,7 +332,7 @@ const CheckoutQR = () => {
                 <p className="text-xs text-muted-foreground mt-0.5">{orderData.tierLabel}</p>
               )}
             </div>
-            {cleanAmount && (
+            {cleanAmountVal && (
               <Button
                 type="button"
                 variant="outline"
@@ -314,14 +340,14 @@ const CheckoutQR = () => {
                 className="border-primary/50 text-primary hover:bg-primary/10 text-xs font-semibold"
               >
                 <Copy className="w-3.5 h-3.5 mr-1.5" />
-                Copy ₹{cleanAmount}
+                Copy ₹{cleanAmountVal}
               </Button>
             )}
           </div>
 
           {/* UPI ID with 1-Click Copy */}
           <div>
-            <Label className="text-foreground">UPI ID (If manually paying)</Label>
+            <Label className="text-foreground">UPI ID (If paying manually)</Label>
             <div className="flex items-center space-x-2 mt-2">
               <Input
                 value={upiId}
@@ -338,6 +364,17 @@ const CheckoutQR = () => {
                 Copy UPI ID
               </Button>
             </div>
+          </div>
+
+          {/* Self-Payment Warning Box */}
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-300">
+            <p className="font-semibold flex items-center gap-1.5 text-amber-400">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              Important Testing Note:
+            </p>
+            <p className="mt-1 text-amber-200/90 leading-relaxed">
+              UPI apps (PhonePe, Google Pay) do not allow scanning your own UPI ID from the same phone (they block self-transfer with "Unable to scan"). To test, please scan using another device/phone, or tap the direct app buttons above.
+            </p>
           </div>
 
           {/* Screenshot Upload */}
@@ -369,8 +406,8 @@ const CheckoutQR = () => {
             </h3>
             <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
               <li>Scan the QR code using any UPI app (Google Pay, PhonePe, Paytm, BHIM)</li>
-              <li>Or click the green <strong>"Pay directly with UPI App"</strong> button if on mobile</li>
-              <li>If your app asks for amount, enter: <strong className="text-primary">{orderData.price}</strong></li>
+              <li>Or tap any of the direct buttons above (Google Pay, PhonePe, Paytm)</li>
+              <li>Confirm the amount: <strong className="text-primary">{orderData.price}</strong> and enter your UPI PIN</li>
               <li>Upload payment screenshot (optional) and tap <strong>"Submit Order After Payment"</strong></li>
               <li>TradingView indicator access will be granted to your username shortly</li>
             </ol>
