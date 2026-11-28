@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, Save } from 'lucide-react';
+import { Upload, Save, QrCode, Trash2 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 export const QRManagement = () => {
   const [upiId, setUpiId] = useState('8668657835@ybl');
@@ -164,6 +165,25 @@ export const QRManagement = () => {
                 {saving ? 'Saving...' : 'Save'}
               </Button>
             </div>
+
+            {/* Live Generated QR Preview */}
+            <div className="mt-4 pt-4 border-t border-border/50">
+              <p className="text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
+                <QrCode className="w-4 h-4 text-primary" />
+                Live Generated Scannable QR (Always matches your UPI ID)
+              </p>
+              <div className="bg-white p-3 rounded-xl inline-block shadow-sm">
+                <QRCodeSVG
+                  value={`upi://pay?pa=${(upiId || '8668657835@ybl').trim()}&pn=Atropine&cu=INR`}
+                  size={180}
+                  level="M"
+                  includeMargin={true}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Scan with Google Pay, PhonePe, or Paytm to verify your UPI ID works!
+              </p>
+            </div>
           </div>
         </div>
 
@@ -171,8 +191,11 @@ export const QRManagement = () => {
         <div className="bg-panel rounded-lg p-6 border border-border space-y-4">
           <div>
             <Label htmlFor="qr" className="text-foreground">
-              Upload QR Code
+              Upload Custom Standee / Merchant QR Code (Optional)
             </Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              If left empty, the system automatically shows the live scannable QR code above with exact order amounts.
+            </p>
             <div className="mt-2">
               <Input
                 id="qr"
@@ -190,11 +213,22 @@ export const QRManagement = () => {
 
           {qrUrl && (
             <div>
-              <p className="text-sm text-muted-foreground mb-2">Current QR Code</p>
+              <div className="flex items-center justify-between mb-2 max-w-xs">
+                <p className="text-sm text-muted-foreground">Uploaded Custom QR</p>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => saveQRUrl('')}
+                  className="text-red-400 hover:text-red-300 h-7 px-2 text-xs"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1" />
+                  Remove
+                </Button>
+              </div>
               <div className="bg-white rounded-lg p-4 inline-block">
                 <img
                   src={qrUrl}
-                  alt="Payment QR Code"
+                  alt="Custom Payment QR Code"
                   className="w-48 h-48 object-contain"
                 />
               </div>
