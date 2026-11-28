@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Save, QrCode, Trash2 } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 
 export const QRManagement = () => {
   const [upiId, setUpiId] = useState('8668657835@ybl');
@@ -173,10 +173,10 @@ export const QRManagement = () => {
                 Live Generated Scannable QR (Always matches your UPI ID)
               </p>
               <div className="bg-white p-3 rounded-xl inline-block shadow-sm">
-                <QRCodeSVG
+                <QRCodeCanvas
                   value={`upi://pay?pa=${(upiId || '8668657835@ybl').trim()}&pn=Atropine&cu=INR`}
                   size={180}
-                  level="M"
+                  level="L"
                   includeMargin={true}
                 />
               </div>
