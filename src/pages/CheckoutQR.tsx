@@ -3,9 +3,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Copy, Upload } from 'lucide-react';
+import { Copy, Upload, QrCode, Smartphone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { QRCodeSVG } from 'qrcode.react';
 import upiQrFallback from '@/assets/upi-qr.png';
 
 const CheckoutQR = () => {
@@ -20,6 +21,7 @@ const CheckoutQR = () => {
 
   const [upiId, setUpiId] = useState('8668657835@ybl');
   const [qrUrl, setQrUrl] = useState(upiQrFallback);
+  const [qrView, setQrView] = useState<'dynamic' | 'custom'>('dynamic');
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -126,6 +128,18 @@ const CheckoutQR = () => {
     return null;
   }
 
+  // Extract pure numeric amount from price (e.g. '₹699' -> '699.00')
+  const cleanAmount = orderData?.price ? String(orderData.price).replace(/[^0-9.]/g, '') : '';
+  const numericAmount = cleanAmount && !isNaN(Number(cleanAmount)) ? Number(cleanAmount).toFixed(2) : '';
+
+  // Form compliant NPCI UPI payment URI
+  const cleanUpi = (upiId || '8668657835@ybl').trim();
+  const upiPaymentUri = numericAmount && Number(numericAmount) > 0
+    ? `upi://pay?pa=${cleanUpi}&pn=Atropine&am=${numericAmount}&cu=INR&tn=Order_${orderData?.orderId || 'ATR'}`
+    : `upi://pay?pa=${cleanUpi}&pn=Atropine&cu=INR&tn=Order_${orderData?.orderId || 'ATR'}`;
+
+  const hasCustomUploadedQr = Boolean(qrUrl && qrUrl !== upiQrFallback && !qrUrl.includes('upi-qr.png'));
+
   return (
     <div className="min-h-screen bg-background pt-32 pb-24">
       <div className="container mx-auto px-4 max-w-3xl">
@@ -134,14 +148,68 @@ const CheckoutQR = () => {
         </h1>
 
         <div className="bg-panel rounded-2xl p-8 border border-primary/30 space-y-6">
-          {/* QR Code */}
-          <div className="bg-white rounded-xl p-6 flex justify-center">
-            <img
-              src={qrUrl}
-              alt="UPI QR Code"
-              className="w-64 h-64 object-contain"
-            />
+          {/* Custom QR vs Dynamic QR Switcher if custom uploaded */}
+          {hasCustomUploadedQr && (
+            <div className="flex justify-center">
+              <div className="bg-background border border-border p-1 rounded-xl flex gap-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setQrView('dynamic')}
+                  className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+                    qrView === 'dynamic'
+                      ? 'bg-primary text-primary-foreground shadow'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  ⚡ Dynamic Scannable QR (Auto Amount)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQrView('custom')}
+                  className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+                    qrView === 'custom'
+                      ? 'bg-primary text-primary-foreground shadow'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Custom Merchant QR
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* QR Code Container */}
+          <div className="bg-white rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg border border-border">
+            {hasCustomUploadedQr && qrView === 'custom' ? (
+              <img
+                src={qrUrl}
+                alt="UPI QR Code"
+                className="w-64 h-64 object-contain rounded-lg"
+              />
+            ) : (
+              <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
+                <QRCodeSVG
+                  value={upiPaymentUri}
+                  size={240}
+                  level="M"
+                  includeMargin={true}
+                />
+              </div>
+            )}
+            <p className="text-xs text-slate-700 font-semibold mt-3 flex items-center gap-1.5 text-center">
+              <QrCode className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Instant Scan with Google Pay, PhonePe, Paytm, BHIM, or any UPI app</span>
+            </p>
           </div>
+
+          {/* Instant 1-Click Pay on Mobile Button */}
+          <a
+            href={upiPaymentUri}
+            className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-center"
+          >
+            <Smartphone className="w-5 h-5 shrink-0" />
+            <span>Pay directly with UPI App (GPay / PhonePe / Paytm)</span>
+          </a>
 
           {/* Amount */}
           <div className="text-center p-4 bg-background rounded-lg border border-border">
